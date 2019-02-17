@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import pf, { ANIMALS } from "petfinder-client";
 import useDropdown from "./useDropdown";
+import Results from "./Results";
 
 const petfinder = pf({
   key: process.env.API_KEY,
@@ -10,12 +11,29 @@ const petfinder = pf({
 const SearchParams = () => {
   const [location, updateLocation] = useState("Seattle, WA");
   const [breeds, updateBreeds] = useState([]);
+  const [pets, setPets] = useState([]);
   const [animal, AnimalDropdown] = useDropdown("Animal", "dog", ANIMALS);
   const [breed, BreedDropdown, updateBreed] = useDropdown("Breed", "", breeds);
+
+  async function requestPets() {
+    const res = await petfinder.pet.find({
+      location,
+      breed,
+      animal,
+      output: "full"
+    });
+
+    setPets(
+      Array.isArray(res.petfinder.pets.pet)
+        ? res.petfinder.pets.pet
+        : [res.petfinder.pets.pet]
+    );
+  }
 
   useEffect(() => {
     updateBreeds([]);
     updateBreed("");
+
     petfinder.breed.list({ animal }).then(data => {
       updateBreeds(
         Array.isArray(data.petfinder.breeds.breed)
@@ -27,7 +45,12 @@ const SearchParams = () => {
 
   return (
     <div className="search-params">
-      <form>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          requestPets();
+        }}
+      >
         <label htmlFor="location">
           Location
           <input
@@ -41,6 +64,7 @@ const SearchParams = () => {
         <BreedDropdown />
         <button>Submit</button>
       </form>
+      <Results pets={pets} />
     </div>
   );
 };

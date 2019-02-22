@@ -1,6 +1,7 @@
 import React from "react";
 import pf from "petfinder-client";
 import Carousel from "./Carousel";
+import Modal from "./Modal";
 import ErrorBoundary from "./ErrorBoundary";
 import ThemeContext from "./ThemeContext";
 
@@ -10,7 +11,7 @@ const petfinder = pf({
 });
 
 class Details extends React.Component {
-  state = { loading: true };
+  state = { loading: true, showModal: false };
   componentDidMount() {
     petfinder.pet
       .get({
@@ -38,12 +39,21 @@ class Details extends React.Component {
       })
       .catch(err => this.setState({ error: err }));
   }
+  toggleModal = () => this.setState({ showModal: !this.state.showModal });
   render() {
     if (this.state.loading) {
       return <h1>loading … </h1>;
     }
 
-    const { animal, breed, location, description, media, name } = this.state;
+    const {
+      animal,
+      breed,
+      location,
+      description,
+      media,
+      name,
+      showModal
+    } = this.state;
 
     return (
       <div className="details">
@@ -62,6 +72,15 @@ class Details extends React.Component {
             )}
           </ThemeContext.Consumer>
           <p>{description}</p>
+          {showModal ? (
+            <Modal>
+              <h1>Would you like to adopt {name}?</h1>
+              <div className="buttons">
+                <button onClick={this.toggleModal}>Yes</button>
+                <button onClick={this.toggleModal}>No</button>
+              </div>
+            </Modal>
+          ) : null}
         </div>
       </div>
     );
